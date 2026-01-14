@@ -28,7 +28,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import kr.pe.ssun.sugarwidget.ui.theme.SugarWidgetTheme
+import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -99,11 +105,16 @@ fun InputScreen(modifier: Modifier = Modifier) {
 
         Button(
             onClick = {
+                // 영구 저장
                 sharedPref.edit().apply {
                     putString("phone_number", phoneNumber)
                     putString("birth_date", birthDate)
                     apply()
                 }
+                
+                // WorkManager 스케줄링
+                schedulePeriodicWork(context)
+                
                 Toast.makeText(context, "정보가 저장되었습니다.", Toast.LENGTH_SHORT).show()
             },
             modifier = Modifier.fillMaxWidth()
@@ -111,6 +122,22 @@ fun InputScreen(modifier: Modifier = Modifier) {
             Text("확인")
         }
     }
+}
+
+private fun schedulePeriodicWork(context: Context) {
+    val constraints = Constraints.Builder()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
+
+    val periodicWorkRequest = PeriodicWorkRequestBuilder<NetworkWorker>(1, TimeUnit.DAYS)
+        .setConstraints(constraints)
+        .build()
+
+    WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+        "SugarNetworkWork",
+        ExistingPeriodicWorkPolicy.KEEP,
+        periodicWorkRequest
+    )
 }
 
 @Preview(showBackground = true)
