@@ -1,11 +1,16 @@
 package kr.pe.ssun.sugarwidget
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +24,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,6 +34,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
@@ -60,6 +67,26 @@ fun InputScreen(modifier: Modifier = Modifier) {
     }
     var birthDate by remember {
         mutableStateOf(sharedPref.getString("birth_date", "") ?: "")
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            Toast.makeText(context, "SMS 수신 권한이 허용되었습니다.", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, "SMS 수신 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.RECEIVE_SMS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            permissionLauncher.launch(Manifest.permission.RECEIVE_SMS)
+        }
     }
 
     Column(
@@ -129,7 +156,8 @@ private fun schedulePeriodicWork(context: Context) {
         .setRequiredNetworkType(NetworkType.CONNECTED)
         .build()
 
-    val periodicWorkRequest = PeriodicWorkRequestBuilder<NetworkWorker>(1, TimeUnit.DAYS)
+    // DailyNetworkWorker 또는 NetworkWorker 중 적절한 것을 사용 (사용자 코드에는 둘 다 있음)
+    val periodicWorkRequest = PeriodicWorkRequestBuilder<DailyNetworkWorker>(1, TimeUnit.DAYS)
         .setConstraints(constraints)
         .build()
 
