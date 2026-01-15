@@ -69,23 +69,31 @@ fun InputScreen(modifier: Modifier = Modifier) {
         mutableStateOf(sharedPref.getString("birth_date", "") ?: "")
     }
 
+    // 필요한 모든 권한 목록
+    val requiredPermissions = arrayOf(
+        Manifest.permission.RECEIVE_SMS,
+        Manifest.permission.RECEIVE_MMS,
+        Manifest.permission.RECEIVE_WAP_PUSH,
+        Manifest.permission.READ_SMS
+    )
+
     val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            Toast.makeText(context, "SMS 수신 권한이 허용되었습니다.", Toast.LENGTH_SHORT).show()
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val allGranted = permissions.entries.all { it.value }
+        if (allGranted) {
+            Toast.makeText(context, "모든 메시지 수신 권한이 허용되었습니다.", Toast.LENGTH_SHORT).show()
         } else {
-            Toast.makeText(context, "SMS 수신 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "메시지 수신을 위해 권한 허용이 필요합니다.", Toast.LENGTH_LONG).show()
         }
     }
 
     LaunchedEffect(Unit) {
-        if (ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.RECEIVE_SMS
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            permissionLauncher.launch(Manifest.permission.RECEIVE_SMS)
+        val missingPermissions = requiredPermissions.filter {
+            ContextCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED
+        }
+        if (missingPermissions.isNotEmpty()) {
+            permissionLauncher.launch(missingPermissions.toTypedArray())
         }
     }
 
@@ -102,11 +110,7 @@ fun InputScreen(modifier: Modifier = Modifier) {
 
         OutlinedTextField(
             value = phoneNumber,
-            onValueChange = {
-                if (it.length <= 11) {
-                    phoneNumber = it
-                }
-            },
+            onValueChange = { if (it.length <= 11) phoneNumber = it },
             label = { Text("전화번호") },
             placeholder = { Text("01012345678") },
             modifier = Modifier.fillMaxWidth(),
@@ -117,11 +121,7 @@ fun InputScreen(modifier: Modifier = Modifier) {
 
         OutlinedTextField(
             value = birthDate,
-            onValueChange = {
-                if (it.length <= 6) {
-                    birthDate = it
-                }
-            },
+            onValueChange = { if (it.length <= 6) birthDate = it },
             label = { Text("생년월일") },
             placeholder = { Text("YYMMDD") },
             modifier = Modifier.fillMaxWidth(),
@@ -132,16 +132,12 @@ fun InputScreen(modifier: Modifier = Modifier) {
 
         Button(
             onClick = {
-                // 영구 저장
                 sharedPref.edit().apply {
                     putString("phone_number", phoneNumber)
                     putString("birth_date", birthDate)
                     apply()
                 }
-                
-                // WorkManager 스케줄링
                 schedulePeriodicWork(context)
-                
                 Toast.makeText(context, "정보가 저장되었습니다.", Toast.LENGTH_SHORT).show()
             },
             modifier = Modifier.fillMaxWidth()
@@ -156,7 +152,6 @@ private fun schedulePeriodicWork(context: Context) {
         .setRequiredNetworkType(NetworkType.CONNECTED)
         .build()
 
-    // DailyNetworkWorker 또는 NetworkWorker 중 적절한 것을 사용 (사용자 코드에는 둘 다 있음)
     val periodicWorkRequest = PeriodicWorkRequestBuilder<DailyNetworkWorker>(1, TimeUnit.DAYS)
         .setConstraints(constraints)
         .build()
@@ -166,12 +161,4 @@ private fun schedulePeriodicWork(context: Context) {
         ExistingPeriodicWorkPolicy.KEEP,
         periodicWorkRequest
     )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun InputScreenPreview() {
-    SugarWidgetTheme {
-        InputScreen()
-    }
 }
