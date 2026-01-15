@@ -1,35 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/white"
-    android:orientation="vertical"
-    android:padding="4dp"
-    android:gravity="center">
+    android:padding="4dp">
 
-    <TextView
-        android:id="@+id/tv_data"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="0/0G"
-        android:textStyle="bold"
-        android:textColor="@android:color/black"
-        android:textSize="11sp" />
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/tv_voice"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="0/0분"
-        android:textColor="#555555"
-        android:textSize="10sp" />
+        <TextView
+            android:id="@+id/tv_data"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0/0G"
+            android:textColor="@android:color/black"
+            android:textSize="11sp"
+            android:textStyle="bold" />
 
-    <TextView
-        android:id="@+id/tv_sms"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="0/0건"
-        android:textColor="#555555"
-        android:textSize="10sp" />
+        <TextView
+            android:id="@+id/tv_voice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0/0분"
+            android:textColor="#555555"
+            android:textSize="10sp" />
 
-</LinearLayout>
+        <TextView
+            android:id="@+id/tv_sms"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0/0건"
+            android:textColor="#555555"
+            android:textSize="10sp" />
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/btn_refresh"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:padding="4dp"
+        android:scaleType="fitCenter"
+        android:src="@android:drawable/ic_menu_rotate"
+        android:tint="@android:color/black" />
+
+</RelativeLayout>
